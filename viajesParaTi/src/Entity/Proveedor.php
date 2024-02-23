@@ -127,6 +127,7 @@ class Proveedor
         $this->createdAt = new \DateTime();
     }
 
+
     #[ORM\PreUpdate]
     public function setUpdatedAtValue(): void
     {

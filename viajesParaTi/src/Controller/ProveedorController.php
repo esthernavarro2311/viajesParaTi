@@ -1,43 +1,110 @@
+<?php
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Entity\Proveedor; // Asegúrate de usar la entidad correcta
-use App\Form\ProveedorType; // Si decides usar un formulario
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\TelType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use App\Entity\Proveedor; 
 use Doctrine\ORM\EntityManagerInterface;
-
+ 
 class ProveedorController extends AbstractController
 {
+    private $entityManager;
+    private $formFactory;
+
+    public function __construct(EntityManagerInterface $entityManager, FormFactoryInterface $formFactory)
+    {
+        $this->entityManager = $entityManager;
+        $this->formFactory = $formFactory;
+    }
+
+    #[Route('/index')]
     public function index(): Response
     {
-        $proveedores = $this->getDoctrine()->getRepository(Proveedor::class)->findAll();
+        $proveedores = $this->entityManager->getRepository(Proveedor::class)->findAll();
+
+        $mensaje = empty($proveedores) ? 'No existen valores de proveedores.' : '';
 
         return $this->render('proveedor/index.html.twig', [
             'proveedores' => $proveedores,
+            'mensaje' => $mensaje,
         ]);
     } 
 
-    public function create(Request $request, EntityManagerInterface $em): Response
+    #[Route('/proveedor/create', name: 'proveedor_create')]
+    public function create(Request $request): Response
     {
         $proveedor = new Proveedor();
-        // Aquí podrías añadir un formulario si lo deseas
-        // $form = $this->createForm(ProveedorType::class, $proveedor);
-        // $form->handleRequest($request);
-        
-        // Si estás usando un formulario, verifica si es enviado y válido
-        // if ($form->isSubmitted() && $form->isValid()) {
-        //     $em->persist($proveedor);
-        //     $em->flush();
-        //     return $this->redirectToRoute('proveedor_index');
-        // }
 
-        // return $this->render('proveedor/create.html.twig', [
-        //     'form' => $form->createView(),
-        // ]);
+        $form = $this->createFormBuilder($proveedor)
+        ->add('name', TextType::class, [
+            'label' => 'Proveedor',
+            'attr' => ['class' => 'form-control'],
+            'constraints' => [new NotBlank()]
+        ])
+        ->add('email', EmailType::class, [
+            'label' => 'Correo Electrónico',
+            'attr' => ['class' => 'form-control'],
+            'constraints' => [new NotBlank()]
+        ])
+        ->add('phone', TelType::class, [
+            'label' => 'Teléfono',
+            'attr' => ['class' => 'form-control'],
+            'constraints' => [new NotBlank()]
+        ])
+        ->add('type', ChoiceType::class, [
+            'label' => 'Tipo',
+            'attr' => ['class' => 'form-control'],
+            'choices' => [
+                'Hotel' => 'hotel',
+                'Pista' => 'pista',
+                'Complemento' => 'complemento',
+            ],
+            'constraints' => [new NotBlank()]
+        ])
+        ->add('active', CheckboxType::class, [
+            'label' => 'Activo',
+            'required' => false,
+            'label_attr' => ['class' => 'form-check-label'],
+            'attr' => ['class' => 'form-check-input toggle-checkbox'],
+        ])
+        ->add('save', SubmitType::class, [
+            'label' => 'Crear proveedor',
+            'attr' => ['class' => 'btn btn-primary']
+        ])
+        ->getForm();
 
-        // Si decides no usar un formulario Symfony, asegúrate de manejar la creación con el Request
-        // y persistir el nuevo proveedor con EntityManager.
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $proveedor = $form->getData();
+
+            $proveedor->setCreatedAt(new \DateTime());
+            $proveedor->setUpdatedAt(new \DateTime());
+
+            $entityManager = $this->entityManager; 
+            $entityManager->persist($proveedor);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Proveedor creado correctamente.');
+
+            return $this->redirectToRoute('app_proveedor_index');
+        }
+
+        return $this->render('proveedor/create.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
 
     public function edit(Request $request, EntityManagerInterface $em, Proveedor $proveedor): Response
@@ -45,8 +112,16 @@ class ProveedorController extends AbstractController
         // Similar al método create, pero cargando y actualizando un proveedor existente.
     }
 
-    public function delete(EntityManagerInterface $em, Proveedor $proveedor): Response
+    #[Route('/delete/{id}', name: 'delete_proveedor', methods: ['POST'])]
+    public function delete(Request $request, Proveedor $proveedor, EntityManagerInterface $entityManager): Response
     {
-        // Eliminar el proveedor y redirigir al listado.
+        $entityManager->remove($proveedor);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Proveedor eliminado correctamente.');
+
+        // return $this->redirectToRoute('index'); 
+        return $this->redirectToRoute('app_proveedor_index');
     }
 }
+

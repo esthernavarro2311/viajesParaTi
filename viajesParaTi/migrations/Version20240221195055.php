@@ -18,14 +18,14 @@ final class Version20240221195055 extends AbstractMigration
     }
 
     public function up(Schema $schema): void
-    {
-        // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE proveedor ADD created_at DATETIME NOT NULL, ADD updated_at DATETIME NOT NULL');
-    }
+{
+    // this up() migration is auto-generated, please modify it to your needs
+    $this->addSql('ALTER TABLE proveedor ADD created_at DATETIME DEFAULT NULL, ADD updated_at DATETIME DEFAULT NULL');
+}
 
-    public function down(Schema $schema): void
-    {
-        // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE proveedor DROP created_at, DROP updated_at');
-    }
+public function down(Schema $schema): void
+{
+    // this down() migration is auto-generated, please modify it to your needs
+    $this->addSql('ALTER TABLE proveedor DROP created_at, DROP updated_at');
+}
 }
