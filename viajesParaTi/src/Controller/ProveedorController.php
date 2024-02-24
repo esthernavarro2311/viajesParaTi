@@ -33,7 +33,7 @@ class ProveedorController extends AbstractController
     {
         $proveedores = $this->entityManager->getRepository(Proveedor::class)->findAll();
 
-        $mensaje = empty($proveedores) ? 'No existen valores de proveedores.' : '';
+        $mensaje = empty($proveedores) ? 'No existen valores de proveedores' : '';
 
         return $this->render('proveedor/index.html.twig', [
             'proveedores' => $proveedores,
@@ -80,7 +80,7 @@ class ProveedorController extends AbstractController
         ])
         ->add('save', SubmitType::class, [
             'label' => 'Crear proveedor',
-            'attr' => ['class' => 'btn btn-primary']
+            'attr' => ['class' => 'btn btn-generic']
         ])
         ->getForm();
 
@@ -107,10 +107,68 @@ class ProveedorController extends AbstractController
         ]);
     }
 
-    public function edit(Request $request, EntityManagerInterface $em, Proveedor $proveedor): Response
+
+    #[Route('/proveedor/edit/{id}', name: 'proveedor_edit')]
+    public function edit(Request $request, EntityManagerInterface $entityManager, Proveedor $proveedor): Response
     {
-        // Similar al método create, pero cargando y actualizando un proveedor existente.
+        $form = $this->createFormBuilder($proveedor)
+            ->add('name', TextType::class, [
+                'label' => 'Proveedor',
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [new NotBlank()]
+            ])
+            ->add('email', EmailType::class, [
+                'label' => 'Correo Electrónico',
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [new NotBlank()]
+            ])
+            ->add('phone', TelType::class, [
+                'label' => 'Teléfono',
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [new NotBlank()]
+            ])
+            ->add('type', ChoiceType::class, [
+                'label' => 'Tipo',
+                'attr' => ['class' => 'form-control'],
+                'choices' => [
+                    'Hotel' => 'hotel',
+                    'Pista' => 'pista',
+                    'Complemento' => 'complemento',
+                ],
+                'constraints' => [new NotBlank()]
+            ])
+            ->add('active', CheckboxType::class, [
+                'label' => 'Activo',
+                'required' => false,
+                'label_attr' => ['class' => 'form-check-label'],
+                'attr' => ['class' => 'form-check-input toggle-checkbox'],
+            ])
+            ->add('save', SubmitType::class, [
+                'label' => 'Actualizar proveedor',
+                'attr' => ['class' => 'btn btn-generic']
+            ])
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $proveedor = $form->getData();
+            $proveedor->setUpdatedAt(new \DateTime());
+
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Proveedor actualizado correctamente.');
+
+            return $this->redirectToRoute('app_proveedor_index');
+        }
+
+        return $this->render('proveedor/edit.html.twig', [
+            'form' => $form->createView(),
+            'proveedor' => $proveedor, 
+        ]);
     }
+
+
 
     #[Route('/delete/{id}', name: 'delete_proveedor', methods: ['POST'])]
     public function delete(Request $request, Proveedor $proveedor, EntityManagerInterface $entityManager): Response
@@ -120,7 +178,6 @@ class ProveedorController extends AbstractController
 
         $this->addFlash('success', 'Proveedor eliminado correctamente.');
 
-        // return $this->redirectToRoute('index'); 
         return $this->redirectToRoute('app_proveedor_index');
     }
 }

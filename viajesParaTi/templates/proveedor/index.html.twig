@@ -3,13 +3,14 @@
 
 {% block body %}
     {% if mensaje %}
-        <div class="alert alert-info" role="alert">
-            {{ mensaje }}
+       <div class="d-flex flex-column align-items-center mb-3">
+            <h4>{{ mensaje }}</h4>
+            <a href="{{ path('proveedor_create') }}" class="btn btn-generic">Crear proveedor</a>
         </div>
     {% else %}
-        <h2 class="mb-3">Listado de Proveedores</h2>
-        <div class="mb-3">
-            <a href="{{ path('proveedor_create') }}" class="btn btn-primary">Crear Proveedor</a>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Listado de Proveedores</h2>
+            <a href="{{ path('proveedor_create') }}" class="btn btn-generic mr-3">Crear proveedor</a>
         </div>
         <div class="table-responsive">
             <table class="table table-striped table-hover">
@@ -31,14 +32,17 @@
                             <td>{{ proveedor.name }}</td>
                             <td>{{ proveedor.email }}</td>
                             <td>{{ proveedor.phone }}</td>
-                            <td>{{ proveedor.type }}</td>
+                            <td>{{ proveedor.type|capitalize }}</td>
                             <td>{{ proveedor.active == 1 ? 'Si' : 'No' }}</td>
                             <td>{{ proveedor.createdAt|date('d-m-Y H:i:s') }}</td>
                             <td>{{ proveedor.updatedAt|date('d-m-Y H:i:s')}}</td>
                             <td scope="col">
-                                <form action="{{ path('delete_proveedor', {'id': proveedor.id}) }}" method="POST">
-                                    <button type="submit" class="btn btn-danger">Borrar</button>
-                                </form>
+                                <div class="d-grid">
+                                    <a href="{{ path('proveedor_edit', {'id': proveedor.id}) }}" class="btn btn-edit btn-block">Editar</a>
+                                    <form action="{{ path('delete_proveedor', {'id': proveedor.id}) }}" method="POST">
+                                        <button type="submit" class="btn btn-delete btn-block mt-1">Eliminar</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
