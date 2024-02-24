@@ -1,6 +1,5 @@
 <?php
 
-// src/DataFixtures/ProveedorFixtures.php
 
 namespace App\DataFixtures;
 
@@ -40,12 +39,10 @@ class ProveedorFixtures extends Fixture
         $proveedor3->setCreatedAt(new \DateTime()); 
         $proveedor3->setUpdatedAt(new \DateTime()); 
 
-        // Persistir los objetos Proveedor
         $manager->persist($proveedor1);
         $manager->persist($proveedor2);
         $manager->persist($proveedor3);
 
-        // Ejecutar cambios en la base de datos
         $manager->flush();
     }
 }
